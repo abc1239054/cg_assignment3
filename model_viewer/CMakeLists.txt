@@ -51,6 +51,13 @@ include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/../external/lodepng")
 aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui" PROJECT_SRCS)
 include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui")
 
+# tinyobjloader
+aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}/../external/tinyobjloader" PROJECT_SRCS)
+include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/../external/tinyobjloader")
+
+# stb_image
+include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/../external/stb")
+
 # Add executable for project
 add_executable(${PROJECT_NAME} ${PROJECT_SRCS})
 
