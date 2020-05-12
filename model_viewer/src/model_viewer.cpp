@@ -57,6 +57,8 @@ struct Context {
     GLuint defaultVAO;
     GLuint cubemap;
     float elapsed_time;
+    float zoom_scale = 45.0f;
+    bool menu_active = true;
 };
 
 // Returns the value of an environment variable
@@ -177,10 +179,16 @@ void drawMesh(Context &ctx, GLuint program, const MeshVAO &meshVAO)
 {
     // Define uniforms
     glm::mat4 model = trackballGetRotationMatrix(ctx.trackball);
-    glm::mat4 view = glm::mat4();
-    glm::mat4 projection = glm::ortho(-ctx.aspect, ctx.aspect, -1.0f, 1.0f, -1.0f, 1.0f);
+    glm::mat4 view = glm::lookAt(
+        glm::vec3(0,3,3), // Camera is at (3,3,3), in World Space
+        glm::vec3(0,0,0), // and looks at the origin
+        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+    );
+    glm::mat4 projection = glm::perspective(glm::radians(ctx.zoom_scale), (float) ctx.width / (float)ctx.height, 0.1f, 100.0f);
     glm::mat4 mv = view * model;
     glm::mat4 mvp = projection * mv;
+
+
     // ...
 
     // Activate program
@@ -193,6 +201,7 @@ void drawMesh(Context &ctx, GLuint program, const MeshVAO &meshVAO)
     glUniformMatrix4fv(glGetUniformLocation(program, "u_mv"), 1, GL_FALSE, &mv[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(program, "u_mvp"), 1, GL_FALSE, &mvp[0][0]);
     glUniform1f(glGetUniformLocation(program, "u_time"), ctx.elapsed_time);
+
     // ...
 
     // Draw!
@@ -300,6 +309,14 @@ void resizeCallback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
+    if(ctx->zoom_scale > 120) ctx->zoom_scale = 120.0f;
+    else if(ctx->zoom_scale < 0) ctx->zoom_scale = 0.0f;
+    else ctx->zoom_scale -= yoffset;
+}
+
 int main(void)
 {
     Context ctx;
@@ -319,6 +336,7 @@ int main(void)
     glfwSetWindowUserPointer(ctx.window, &ctx);
     glfwSetKeyCallback(ctx.window, keyCallback);
     glfwSetCharCallback(ctx.window, charCallback);
+    glfwSetScrollCallback(ctx.window, scrollCallback);
     glfwSetMouseButtonCallback(ctx.window, mouseButtonCallback);
     glfwSetCursorPosCallback(ctx.window, cursorPosCallback);
     glfwSetFramebufferSizeCallback(ctx.window, resizeCallback);
@@ -334,6 +352,8 @@ int main(void)
 
     // Initialize GUI
     ImGui_ImplGlfwGL3_Init(ctx.window, false /*do not install callbacks*/);
+
+
 
     // Initialize rendering
     glGenVertexArrays(1, &ctx.defaultVAO);
