@@ -19,6 +19,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
+#include <string>
 
 // The attribute locations we will use in the vertex shader
 enum AttributeLocation {
@@ -55,7 +56,8 @@ struct Context {
     Mesh mesh;
     MeshVAO meshVAO;
     GLuint defaultVAO;
-    GLuint cubemap;
+    std::vector<std::string> folder_names={"0.125", "0.5", "2", "8", "32", "128", "512", "2048"};
+    std::vector<GLuint> cubemap;
     float zoom_scale = 45.0f;
     bool menu_active = true;
     float background_color[4] = {0.2, 0.2, 0.2, 1.0};
@@ -67,6 +69,8 @@ struct Context {
     float specular_power = 16.0f;
     bool enable_gamma = true;
     bool show_normal = false;
+    bool enable_texture = false;
+    int current_texture = 7;
 };
 
 // Returns the value of an environment variable
@@ -178,6 +182,10 @@ void init(Context &ctx)
 
     // Load cubemap texture(s)
     // ...
+    for (std::string s:ctx.folder_names) {
+        ctx.cubemap.push_back(loadCubemap(cubemapDir() + "/Forrest/prefiltered/" + s + "/"));
+    }
+    
 
     initializeTrackball(ctx);
 }
@@ -203,7 +211,8 @@ void drawMesh(Context &ctx, GLuint program, const MeshVAO &meshVAO)
     glUseProgram(program);
 
     // Bind textures
-    // ...
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, ctx.cubemap[ctx.current_texture]);
 
     // Pass uniforms
     glUniformMatrix4fv(glGetUniformLocation(program, "u_mv"), 1, GL_FALSE, &mv[0][0]);
@@ -216,6 +225,8 @@ void drawMesh(Context &ctx, GLuint program, const MeshVAO &meshVAO)
     glUniform1f(glGetUniformLocation(program, "specular_power"), ctx.specular_power);
     glUniform1i(glGetUniformLocation(program, "enable_gamma"), ctx.enable_gamma);
     glUniform1i(glGetUniformLocation(program, "show_normal"), ctx.show_normal);
+    glUniform1i(glGetUniformLocation(program, "enable_texture"), ctx.enable_texture);
+    glUniform1i(glGetUniformLocation(program, "cubemap"), GL_TEXTURE0);
     // ...
 
     // Draw!
@@ -355,6 +366,8 @@ int main(void)
     glfwSetCursorPosCallback(ctx.window, cursorPosCallback);
     glfwSetFramebufferSizeCallback(ctx.window, resizeCallback);
 
+    
+
     // Load OpenGL functions
     glewExperimental = true;
     GLenum status = glewInit();
@@ -390,16 +403,21 @@ int main(void)
             ImGui::ColorEdit4("Diffuse color", ctx.diffuse_color);
             ImGui::ColorEdit4("Specular color", ctx.specular_color);
             ImGui::SliderFloat("Specular power", &ctx.specular_power, 0.0f, 100.0f);
+            ImGui::Checkbox("Enable texture",&ctx.enable_texture);
+            if(ctx.enable_texture)
+                ImGui::SliderInt("Fliter size",&ctx.current_texture, 0, ctx.cubemap.size()-1);
+
 
         ImGui::Text("Lighting");
-        ImGui::ColorEdit4("Background color", ctx.background_color);
-        ImGui::ColorEdit4("Light color", ctx.light_color);
-        ImGui::SliderFloat3("Light position", ctx.light_position, -10.0, 10.0);
-        ImGui::ColorEdit4("Ambient color", ctx.ambient_color);
+            ImGui::ColorEdit4("Background color", ctx.background_color);
+            ImGui::ColorEdit4("Light color", ctx.light_color);
+            ImGui::SliderFloat3("Light position", ctx.light_position, -10.0, 10.0);
+            ImGui::ColorEdit4("Ambient color", ctx.ambient_color);
 
         ImGui::Text("Other");
         ImGui::Checkbox("Enable gamma correction",&ctx.enable_gamma);
         ImGui::Checkbox("Show normals",&ctx.show_normal);
+        
 
         ImGui::End();
         

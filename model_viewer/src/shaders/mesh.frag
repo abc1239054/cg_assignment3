@@ -16,15 +16,19 @@ uniform vec4 light_color;
 
 uniform bool enable_gamma;
 uniform bool show_normal;
+uniform bool enable_texture;
 
-
+uniform samplerCube cubemap;
 out vec4 frag_color;
 
 void main()
 {
+    
     vec3 l = normalize(light_dir);
     vec3 n = normalize(normal);
     vec3 e = normalize(eye);
+
+    vec3 r = reflect(-e, n);
 
     float lambertian = max(dot(l, n), 0.0);
     vec4 diffuse = lambertian * diffuse_color * light_color;
@@ -41,6 +45,11 @@ void main()
 
     if (show_normal) {
         color = vec4(v_normal, 1.0)*0.5+0.5;
+        
+    }
+
+    else if (enable_texture){
+        color = vec4(texture(cubemap, r).rgb, 1.0);
     }
 
     else {
