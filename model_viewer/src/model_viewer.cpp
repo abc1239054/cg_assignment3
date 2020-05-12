@@ -59,6 +59,15 @@ struct Context {
     float elapsed_time;
     float zoom_scale = 45.0f;
     bool menu_active = true;
+    float background_color[4] = {0.2, 0.2, 0.2, 1.0};
+    float light_position[3] = {1.0, 1.0, 1.0};
+    float light_color[4] = {1.0, 1.0, 1.0, 1.0};
+    float ambient_color[4] = {1.0, 0.0, 0.0, 1.0};
+    float diffuse_color[4] = {0.5, 0.0, 0.0, 1.0};
+    float specular_color[4] = {1.0, 1.0, 1.0, 1.0};
+    float specular_power = 16.0f;
+    bool enable_gamma = true;
+    bool show_normal = false;
 };
 
 // Returns the value of an environment variable
@@ -200,8 +209,14 @@ void drawMesh(Context &ctx, GLuint program, const MeshVAO &meshVAO)
     // Pass uniforms
     glUniformMatrix4fv(glGetUniformLocation(program, "u_mv"), 1, GL_FALSE, &mv[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(program, "u_mvp"), 1, GL_FALSE, &mvp[0][0]);
-    glUniform1f(glGetUniformLocation(program, "u_time"), ctx.elapsed_time);
-
+    glUniform4fv(glGetUniformLocation(program, "ambient"), 1, ctx.ambient_color);
+    glUniform3fv(glGetUniformLocation(program, "light_position"), 1, ctx.light_position);
+    glUniform4fv(glGetUniformLocation(program, "light_color"), 1, ctx.light_color);
+    glUniform4fv(glGetUniformLocation(program, "diffuse_color"), 1, ctx.diffuse_color);
+    glUniform4fv(glGetUniformLocation(program, "specular_color"), 1, ctx.specular_color);
+    glUniform1f(glGetUniformLocation(program, "specular_power"), ctx.specular_power);
+    glUniform1i(glGetUniformLocation(program, "enable_gamma"), ctx.enable_gamma);
+    glUniform1i(glGetUniformLocation(program, "show_normal"), ctx.show_normal);
     // ...
 
     // Draw!
@@ -212,7 +227,7 @@ void drawMesh(Context &ctx, GLuint program, const MeshVAO &meshVAO)
 
 void display(Context &ctx)
 {
-    glClearColor(0.2, 0.2, 0.2, 1.0);
+    glClearColor(ctx.background_color[0], ctx.background_color[1], ctx.background_color[2], ctx.background_color[3]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST); // ensures that polygons overlap correctly
@@ -328,8 +343,8 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    ctx.width = 500;
-    ctx.height = 500;
+    ctx.width = 1024;
+    ctx.height = 768;
     ctx.aspect = float(ctx.width) / float(ctx.height);
     ctx.window = glfwCreateWindow(ctx.width, ctx.height, "Model viewer", nullptr, nullptr);
     glfwMakeContextCurrent(ctx.window);
@@ -352,6 +367,7 @@ int main(void)
 
     // Initialize GUI
     ImGui_ImplGlfwGL3_Init(ctx.window, false /*do not install callbacks*/);
+    
 
 
 
@@ -365,7 +381,31 @@ int main(void)
     while (!glfwWindowShouldClose(ctx.window)) {
         glfwPollEvents();
         ctx.elapsed_time = glfwGetTime();
+        
+        // GUI setting
         ImGui_ImplGlfwGL3_NewFrame();
+        
+        
+        ImGui::Begin("Setting", &ctx.menu_active, ImGuiWindowFlags_MenuBar);
+        ImGui::Text("Material");
+            ImGui::ColorEdit4("Diffuse color", ctx.diffuse_color);
+            ImGui::ColorEdit4("Specular color", ctx.specular_color);
+            ImGui::SliderFloat("Specular power", &ctx.specular_power, 0.0f, 100.0f);
+
+        ImGui::Text("Lighting");
+        ImGui::ColorEdit4("Background color", ctx.background_color);
+        ImGui::ColorEdit4("Light color", ctx.light_color);
+        ImGui::SliderFloat3("Light position", ctx.light_position, -10.0, 10.0);
+        ImGui::ColorEdit4("Ambient color", ctx.ambient_color);
+
+        ImGui::Text("Other");
+        ImGui::Checkbox("Enable gamma correction",&ctx.enable_gamma);
+        ImGui::Checkbox("Show normals",&ctx.show_normal);
+
+        ImGui::End();
+        
+        
+        
         display(ctx);
         ImGui::Render();
         glfwSwapBuffers(ctx.window);
