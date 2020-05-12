@@ -1,11 +1,11 @@
 // Fragment shader
-#version 150
+#version 330
 
 
-varying vec3 normal;
-varying vec3 light_dir;
-varying vec3 eye;
-varying vec3 v_normal;
+in vec3 normal;
+in vec3 light_dir;
+in vec3 eye;
+in vec3 v_normal;
 
 uniform vec4 ambient;
 uniform vec4 diffuse_color;

@@ -1,5 +1,5 @@
 // Vertex shader
-#version 150
+#version 330
 #extension GL_ARB_explicit_attrib_location : require
 
 layout(location = 0) in vec4 a_position;
@@ -9,10 +9,10 @@ uniform vec3 light_position; // The position of the light source
 uniform mat4 u_mv;
 uniform mat4 u_mvp;
 
-varying vec3 normal;
-varying vec3 light_dir;
-varying vec3 eye;
-varying vec3 v_normal;
+out vec3 normal;
+out vec3 light_dir;
+out vec3 eye;
+out vec3 v_normal;
 
 void main()
 {

@@ -56,13 +56,12 @@ struct Context {
     MeshVAO meshVAO;
     GLuint defaultVAO;
     GLuint cubemap;
-    float elapsed_time;
     float zoom_scale = 45.0f;
     bool menu_active = true;
     float background_color[4] = {0.2, 0.2, 0.2, 1.0};
     float light_position[3] = {1.0, 1.0, 1.0};
     float light_color[4] = {1.0, 1.0, 1.0, 1.0};
-    float ambient_color[4] = {1.0, 0.0, 0.0, 1.0};
+    float ambient_color[4] = {0.2, 0.0, 0.0, 1.0};
     float diffuse_color[4] = {0.5, 0.0, 0.0, 1.0};
     float specular_color[4] = {1.0, 1.0, 1.0, 1.0};
     float specular_power = 16.0f;
@@ -380,7 +379,7 @@ int main(void)
     // Start rendering loop
     while (!glfwWindowShouldClose(ctx.window)) {
         glfwPollEvents();
-        ctx.elapsed_time = glfwGetTime();
+        
         
         // GUI setting
         ImGui_ImplGlfwGL3_NewFrame();
